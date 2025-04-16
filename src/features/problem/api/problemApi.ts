@@ -21,14 +21,13 @@ export type TestCaseType = {
   output: string;
 };
 
-export type ExecuteResultType = {
-  testcase_id: number;
-  stdout: string;
-  stderr: string | null;
-  time: number;
-  memory: number;
+export interface ExecuteResultType {
+  id: number;
+  output: string;
   status: string;
-};
+  executionTime: number;
+  memoryUsage: number;
+}
 
 export const api = axios.create({
   baseURL: BASE_URL,

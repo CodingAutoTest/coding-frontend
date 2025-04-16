@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProblem } from './hooks/useProblem';
 import { useTimer } from './hooks/useTimer';
+import { useUser } from '../user/hooks/useUser';
 import { executeCode, submitCode } from './api/problemApi';
 import { CodeEditor, ProgrammingLanguage } from './components/CodeEditor';
 import { TestCase } from './components/TestCase';
@@ -11,6 +12,7 @@ export const ProblemPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { problemData, testCases, loading, error } = useProblem(id || '');
   const { formattedTime, isRunning, startTimer, stopTimer, resetTimer } = useTimer();
+  const { user, loading: userLoading } = useUser(1);
   
   const [code, setCode] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage>('python');
@@ -26,6 +28,8 @@ export const ProblemPage: React.FC = () => {
   const [executeResults, setExecuteResults] = useState<any[]>([]);
   const [input1, setInput1] = useState<string>('');
   const [input2, setInput2] = useState<string>('');
+  const [executeResult, setExecuteResult] = useState<string>('');
+  const [submitResult, setSubmitResult] = useState<string>('');
 
   const handleExecute = async () => {
     if (!code.trim()) {
@@ -44,6 +48,7 @@ export const ProblemPage: React.FC = () => {
     try {
       const results = await executeCode(code, selectedLanguage, testCases.map(tc => tc.id));
       setExecuteResults(results);
+      setExecuteResult(results[0].output);
       setShowModal(true);
     } catch (err) {
       console.error('실행 중 오류 발생:', err);
@@ -71,12 +76,13 @@ export const ProblemPage: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      await submitCode(
+      const result = await submitCode(
         Number(id),
         code,
         selectedLanguage,
         Number(localStorage.getItem('user_id'))
       );
+      setSubmitResult(result.message);
       setSubmitModal(true);
     } catch (err) {
       console.error('제출 중 오류 발생:', err);
@@ -94,12 +100,16 @@ export const ProblemPage: React.FC = () => {
     setInput2(testCase.output);
   };
 
-  if (loading) {
+  if (loading || userLoading) {
     return <div className="w-full h-full flex items-center justify-center">Loading...</div>;
   }
 
   if (error) {
     return <div className="w-full h-full flex items-center justify-center text-red-500">{error}</div>;
+  }
+
+  if (!problemData) {
+    return <div className="w-full h-full flex items-center justify-center">문제를 찾을 수 없습니다.</div>;
   }
 
   return (
@@ -145,7 +155,7 @@ export const ProblemPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[#232323] text-base font-bold">
-              {"조민우"}
+              {user && user.username}
             </span>
             <img
               src={"https://storage.googleapis.com/tagjs-prod.appspot.com/v1/NYTElEXjgV/pe3nhlg9_expires_30_days.png"}
@@ -230,7 +240,7 @@ export const ProblemPage: React.FC = () => {
               </button>
             </div>
             <div className="text-center py-4">
-              <p className="text-[#232323] font-bold">채점이 시작되었습니다.</p>
+              <p className="text-[#232323] font-bold">{submitResult}</p>
               <p className="text-[#666666] mt-2">제출 내역에서 결과를 확인할 수 있습니다.</p>
             </div>
           </div>

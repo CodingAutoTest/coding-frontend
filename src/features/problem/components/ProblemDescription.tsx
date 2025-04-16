@@ -1,8 +1,9 @@
 import React from 'react';
-import { ProblemData } from '../api/problemApi';
+import { ProblemType } from '../api/problemApi';
+import { getDifficultyTier, DIFFICULTY_TIERS } from '../types/difficulty';
 
 interface ProblemDescriptionProps {
-  problemData: ProblemData | null;
+  problemData: ProblemType | null;
   activeTab: '문제' | '결과' | '제출내역';
   onTabClick: (tab: '문제' | '결과' | '제출내역') => void;
   isAlgorithmVisible: boolean;
@@ -16,6 +17,9 @@ export const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
   isAlgorithmVisible,
   onToggleAlgorithm
 }) => {
+  const difficultyTier = problemData ? getDifficultyTier(problemData.difficulty) : 'bronze';
+  const tierInfo = DIFFICULTY_TIERS[difficultyTier];
+
   return (
     <div className="flex-1 bg-[#F4F4F4] rounded-lg">
       {/* 상단 탭 메뉴 */}
@@ -38,9 +42,9 @@ export const ProblemDescription: React.FC<ProblemDescriptionProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <img
-              src={"https://storage.googleapis.com/tagjs-prod.appspot.com/v1/NYTElEXjgV/x0ir229f_expires_30_days.png"}
-              className="w-[20px] h-[20px] object-fill"
-              alt="problem-icon"
+              src={tierInfo.icon}
+              className="w-[24px] h-[24px] object-contain"
+              alt={`${difficultyTier} tier`}
             />
             <span className="text-[#232323] text-[32px] font-bold">
               {problemData?.title}
